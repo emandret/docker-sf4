@@ -1,0 +1,44 @@
+version: '3.6'
+
+volumes:
+  sf4-mysql:
+
+services:
+  database:
+    container_name: sf4-mysql
+    restart: always
+    image: mysql
+    volumes:
+      - sf4-mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    tty: true
+    stdin_open: true
+
+  phpfpm:
+    container_name: sf4-phpfpm
+    restart: always
+    image: php:fpm
+    volumes:
+      - ./${APP_DIR}:${APP_PATH}/${APP_DIR}
+    env_file:
+      - '.env'
+    tty: true
+    stdin_open: true
+
+  webserver:
+    container_name: sf4-apache
+    restart: always
+    image: httpd
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./conf/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./${APP_DIR}:${APP_PATH}/${APP_DIR}
+    environment:
+      - PHPFPM=sf4-phpfpm
+    env_file:
+      - '.env'
+    tty: true
+    stdin_open: true
